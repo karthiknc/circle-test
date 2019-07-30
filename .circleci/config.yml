@@ -4,6 +4,8 @@ jobs:
     docker:
       - image: newsuk/ecs-agent:latest
     steps:
-      - run: echo 'Starting ECS Platform Build'
       - checkout
       - run: printenv
+      - run:
+          name: Running Pipeline
+          command: python ./pipeline.py
