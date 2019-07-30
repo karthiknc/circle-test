@@ -47,10 +47,13 @@ class Pipeline:
                 aws_secret_access_key=credentials['SecretAccessKey'],
                 aws_session_token=credentials['SessionToken']
             )
-            return self.session.client('codebuild')
         except NoCredentialsError as e:
             print('No credentials error')
-            print(e)
+            self.session = boto3.session.Session(
+                aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+                aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY']
+            )
+        return self.session.client('codebuild')
 
     def prepare(self):
         source_version = os.environ['PLATFORM_BRANCH'] if 'PLATFORM_BRANCH' in os.environ else 'master'
