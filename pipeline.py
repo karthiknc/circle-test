@@ -2,7 +2,7 @@ import os
 import time
 import sys
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, NoCredentialsError
 
 
 class Pipeline:
@@ -33,17 +33,24 @@ class Pipeline:
             'dev': 'arn:aws:iam::709143057981:role/CloudFusionCDRole',
             'prod': 'arn:aws:iam::731530244584:role/CloudFusionCDRole'
         }
-        sts = boto3.client('sts')
-        credentials = sts.assume_role(
-            RoleArn=roles[profile],
-            RoleSessionName='jenkins'
-        )['Credentials']
-        self.session = boto3.session.Session(
-            aws_access_key_id=credentials['AccessKeyId'],
-            aws_secret_access_key=credentials['SecretAccessKey'],
-            aws_session_token=credentials['SessionToken']
-        )
-        return self.session.client('codebuild')
+
+        try:
+            sts = boto3.client('sts')
+            credentials = sts.assume_role(
+                RoleArn=roles[profile],
+                RoleSessionName='jenkins'
+            )['Credentials']
+            print('credentials')
+            print(credentials)
+            self.session = boto3.session.Session(
+                aws_access_key_id=credentials['AccessKeyId'],
+                aws_secret_access_key=credentials['SecretAccessKey'],
+                aws_session_token=credentials['SessionToken']
+            )
+            return self.session.client('codebuild')
+        except NoCredentialsError as e:
+            print('No credentials error')
+            print(e)
 
     def prepare(self):
         source_version = os.environ['PLATFORM_BRANCH'] if 'PLATFORM_BRANCH' in os.environ else 'master'
