@@ -16,6 +16,11 @@ class Pipeline:
             exit()
 
         self.session = None
+        if 'CIRCLE_BRANCH' in os.environ:
+            if os.environ['CIRCLE_BRANCH'] == 'master':
+                os.environ['BUILD_ENV'] = 'prod'
+            else:
+                os.environ['BUILD_ENV'] = os.environ['CIRCLE_BRANCH']
         profile = 'prod' if os.environ['BUILD_ENV'] in ('staging', 'prod') else 'dev'
         self.client = self._get_codebuild_client(profile)
         self.build_kwargs = {}
@@ -64,8 +69,9 @@ class Pipeline:
     def run_build(self):
         print('Build starting..')
 
-        builder_run = self.client.start_build(**self.build_kwargs)
-        build_id = builder_run['build']['id']
+        # builder_run = self.client.start_build(**self.build_kwargs)
+        # build_id = builder_run['build']['id']
+        build_id = 'arn:aws:codebuild:eu-west-1:731530244584:build/ecs-wpp-orchestrator:0742d6ba-3650-47b8-ad1f-e22bd0b11bc1'
         print('Build ID: {}'.format(build_id))
 
         if self.get_build_status(build_id):

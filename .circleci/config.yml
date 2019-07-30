@@ -3,6 +3,13 @@ jobs:
   build:
     docker:
       - image: newsuk/ecs-agent:latest
+    branches:
+      only:
+        - master
+        - staging
+        - uat
+        - dev
+        - /rc-.*/
     steps:
       - checkout
       - run: printenv
