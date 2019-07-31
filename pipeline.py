@@ -52,27 +52,22 @@ class Pipeline:
 
         try:
             sts = boto3.client('sts')
+            role_name = 'circleci' if self.is_circle else 'jenkins'
             credentials = sts.assume_role(
                 RoleArn=roles[profile],
-                RoleSessionName='jenkins'
+                RoleSessionName=role_name
             )['Credentials']
             self.session = boto3.session.Session(
                 aws_access_key_id=credentials['AccessKeyId'],
                 aws_secret_access_key=credentials['SecretAccessKey'],
                 aws_session_token=credentials['SessionToken']
             )
-            print(credentials['AccessKeyId'])
         except NoCredentialsError as e:
             print('No credentials error')
             self.session = boto3.session.Session(
                 aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
                 aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY']
             )
-        except Exception as e:
-            print(e)
-        print(self.session)
-        response = self.session.client('sts').get_caller_identity()
-        print(response)
         return self.session.client('codebuild')
 
     def prepare(self):
@@ -107,7 +102,10 @@ class Pipeline:
 
         # builder_run = self.client.start_build(**self.build_kwargs)
         # build_id = builder_run['build']['id']
-        build_id = 'arn:aws:codebuild:eu-west-1:731530244584:build/ecs-wpp-orchestrator:0742d6ba-3650-47b8-ad1f-e22bd0b11bc1'
+        if os.environ['BUILD_ENV'] in ('staging', 'prod'):
+            build_id = 'arn:aws:codebuild:eu-west-1:731530244584:build/ecs-wpp-orchestrator:0742d6ba-3650-47b8-ad1f-e22bd0b11bc1'
+        else:
+            build_id = 'arn:aws:codebuild:eu-west-1:709143057981:build/ecs-wpp-orchestrator:d1375743-c138-4455-b5e1-f145eabff7fa'
         print('Build ID: {}'.format(build_id))
 
         if self.get_build_status(build_id):
