@@ -14,7 +14,7 @@ class Pipeline:
         self.is_circle = 'CIRCLECI' in os.environ
         if 'WORKFLOW' not in os.environ:
             if self.is_circle:
-                os.environ['WORKFLOW'] = 'build-ecs-platform' if os.environ['CIRCLE_PROJECT_REPONAME'] == 'nu-ecsplatform' else 'build-site'
+                os.environ['WORKFLOW'] = 'build-wp-platform' if os.environ['CIRCLE_PROJECT_REPONAME'] == 'nu-ecsplatform' else 'build-site'
             else:
                 print('Initial build. Exiting..')
                 exit()
