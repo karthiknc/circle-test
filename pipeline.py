@@ -40,8 +40,6 @@ class Pipeline:
                 RoleArn=roles[profile],
                 RoleSessionName='jenkins'
             )['Credentials']
-            print('credentials')
-            print(credentials)
             self.session = boto3.session.Session(
                 aws_access_key_id=credentials['AccessKeyId'],
                 aws_secret_access_key=credentials['SecretAccessKey'],
@@ -69,12 +67,18 @@ class Pipeline:
                     'name': 'SITE_REPO',
                     'value': os.environ['GIT_URL'].split('/')[-1].split('.')[0]
                 })
+            elif env_var == 'SITE_REPO' and 'CIRCLE_REPOSITORY_URL' in os.environ:
+                env_vars.append({
+                    'name': 'SITE_REPO',
+                    'value': os.environ['CIRCLE_REPOSITORY_URL'].split('/')[-1].split('.')[0]
+                })
 
         self.build_kwargs = {
             'projectName': self.codebuild_project,
             'sourceVersion': source_version,
             'environmentVariablesOverride': env_vars
         }
+        print(self.build_kwargs)
 
     def run_build(self):
         print('Build starting..')
