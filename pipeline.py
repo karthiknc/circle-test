@@ -61,6 +61,7 @@ class Pipeline:
                 aws_secret_access_key=credentials['SecretAccessKey'],
                 aws_session_token=credentials['SessionToken']
             )
+            print(credentials['AccessKeyId'])
         except NoCredentialsError as e:
             print('No credentials error')
             self.session = boto3.session.Session(
@@ -71,9 +72,6 @@ class Pipeline:
             print(e)
         print(self.session)
         response = self.session.client('sts').get_caller_identity()
-        print(response)
-
-        response = self.session.client('iam').list_account_aliases()
         print(response)
         return self.session.client('codebuild')
 
