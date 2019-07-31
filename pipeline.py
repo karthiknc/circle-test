@@ -67,12 +67,14 @@ class Pipeline:
                 aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
                 aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY']
             )
-            print(self.session)
-            response = self.session.client('sts').get_caller_identity()
-            print(response)
+        except Exception as e:
+            print(e)
+        print(self.session)
+        response = self.session.client('sts').get_caller_identity()
+        print(response)
 
-            response = self.session.client('iam').list_account_aliases()
-            print(response)
+        response = self.session.client('iam').list_account_aliases()
+        print(response)
         return self.session.client('codebuild')
 
     def prepare(self):
