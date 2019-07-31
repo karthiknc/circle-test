@@ -11,22 +11,38 @@ class Pipeline:
                 'GITHUB_TOKEN', 'DEPENDENCY_TAG', 'PLATFORM_BRANCH']
 
     def __init__(self):
+        self.is_circle = 'CIRCLECI' in os.environ
         if 'WORKFLOW' not in os.environ:
-            print('Initial build. Exiting..')
-            exit()
+            if self.is_circle:
+                os.environ['WORKFLOW'] = 'build-ecs-platform' if os.environ['CIRCLE_PROJECT_REPONAME'] == 'nu-ecsplatform' else 'build-site'
+            else:
+                print('Initial build. Exiting..')
+                exit()
 
         self.session = None
-        if 'CIRCLE_BRANCH' in os.environ:
-            if os.environ['CIRCLE_BRANCH'] == 'master':
-                os.environ['BUILD_ENV'] = 'prod'
-            else:
-                os.environ['BUILD_ENV'] = os.environ['CIRCLE_BRANCH']
+        if self.is_circle:
+            self.prepare_circle_envs()
         profile = 'prod' if os.environ['BUILD_ENV'] in ('staging', 'prod') else 'dev'
         self.client = self._get_codebuild_client(profile)
         self.build_kwargs = {}
         self.codebuild_project = 'ecs-wpp-orchestrator'
         if len(sys.argv) > 1:
             self.codebuild_project = sys.argv[1]
+
+    def prepare_circle_envs(self):
+        if os.environ['CIRCLE_BRANCH'] == 'master':
+            os.environ['BUILD_ENV'] = 'prod'
+        else:
+            os.environ['BUILD_ENV'] = os.environ['CIRCLE_BRANCH']
+
+        if 'DEPENDENCY_TAG' not in os.environ:
+            os.environ['DEPENDENCY_TAG'] = 'latest'
+
+        if 'PLATFORM_BRANCH' not in os.environ:
+            os.environ['PLATFORM_BRANCH'] = 'master'
+
+        if 'SITE_BRANCH' not in os.environ:
+            os.environ['SITE_BRANCH'] = 'master'
 
     def _get_codebuild_client(self, profile):
         roles = {
@@ -67,10 +83,10 @@ class Pipeline:
                     'name': 'SITE_REPO',
                     'value': os.environ['GIT_URL'].split('/')[-1].split('.')[0]
                 })
-            elif env_var == 'SITE_REPO' and 'CIRCLE_REPOSITORY_URL' in os.environ:
+            elif env_var == 'SITE_REPO' and 'CIRCLE_PROJECT_REPONAME' in os.environ:
                 env_vars.append({
                     'name': 'SITE_REPO',
-                    'value': os.environ['CIRCLE_REPOSITORY_URL'].split('/')[-1].split('.')[0]
+                    'value': os.environ['CIRCLE_PROJECT_REPONAME']
                 })
 
         self.build_kwargs = {
